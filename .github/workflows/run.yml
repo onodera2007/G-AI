@@ -1,5 +1,6 @@
 name: Run Python script
 on:
+ workflow_dispatch: 
   schedule:
     - cron: '* * * * *'   # 每小时运行一次
 jobs:

@@ -1,15 +1,23 @@
-name: Run Python script
+name: Run Discord Bot
+
 on:
- workflow_dispatch: 
-  schedule:
-    - cron: '* * * * *'   # 每小时运行一次
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
 jobs:
-  build:
+  run-bot:
     runs-on: ubuntu-latest
+    env:
+      DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}   # 这里必须写
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.13.4'
-      - run: pip install -r requirements.txt
-      - run: python bot.py
+          python-version: '3.13'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run bot
+        run: python bot.py

@@ -1,14 +1,16 @@
 import discord
-from discord import app_commands
 from discord.ext import commands
 import os
-import commandsFunction
+import discordMain
+from dotenv import load_dotenv
 
+load_dotenv()
 bot = commands.Bot(
     command_prefix='!',
     intents=discord.Intents.all()
 )
-commandsFunction.commands(bot)
+discordMain.commands(bot)
+discordMain.channel(bot)
 @bot.event
 async def on_ready():
     print(f'✅ 已登录为 {bot.user} (ID: {bot.user.id})')

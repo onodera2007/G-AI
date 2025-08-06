@@ -2,9 +2,14 @@ import discord
 from discord.ext import commands
 import os
 import discordMain
-from dotenv import load_dotenv
-
-load_dotenv()
+ga = False
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    print("检测到使用github action")
+    ga=True
+if (ga!=True):
+    load_dotenv()
 bot = commands.Bot(
     command_prefix='!',
     intents=discord.Intents.all()

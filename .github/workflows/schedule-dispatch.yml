@@ -2,7 +2,6 @@ name: Schedule & Dispatch Bot Run
 
 on:
   schedule:
-    # 每天 0, 6, 12, 18 点触发
     - cron: '0 0,6,12,18 * * *'
   workflow_dispatch:
 
@@ -13,7 +12,7 @@ jobs:
       - name: Cancel previous runs of 'Run Discord Bot'
         uses: styfle/cancel-workflow-action@0.12.1
         with:
-          workflow_id: 'run.yml' # 你主 workflow 的文件名
+          workflow_id: 'run.yml'  # 或者使用数字ID，如 179498731（你的run.yml workflow的ID）
           token: ${{ secrets.PAT_TOKEN }}
 
   dispatch-new:

@@ -9,16 +9,7 @@ on:
   workflow_dispatch:        # 手动触发也保留
 
 jobs:
-  cancel-previous-runs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ secrets.PAT_TOKEN }}
-
   run-bot:
-    needs: cancel-previous-runs
     runs-on: ubuntu-latest
     env:
       DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}

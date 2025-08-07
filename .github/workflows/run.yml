@@ -1,10 +1,24 @@
 name: Run Discord Bot
 
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '21 21 * * *'   # 06:00 JST = 21:00 UTC 前一天
+    - cron: '3 3 * * *'     # 12:00 JST = 03:00 UTC
+    - cron: '9 9 * * *'     # 18:00 JST = 09:00 UTC
+    - cron: '15 15 * * *'   # 24:00 JST = 15:00 UTC
+  workflow_dispatch:        # 手动触发也保留
 
 jobs:
+  cancel-previous-runs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.12.1
+        with:
+          access_token: ${{ secrets.PAT_TOKEN }}
+
   run-bot:
+    needs: cancel-previous-runs
     runs-on: ubuntu-latest
     env:
       DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}

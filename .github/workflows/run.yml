@@ -1,21 +1,19 @@
 name: Run Discord Bot
 
 on:
-  schedule:
-    - cron: '0 6,12,18,0 * * *'   # UTC 时间（日本时间 -9h）
   workflow_dispatch:
 
 jobs:
-  cancel-previous:
+  cancel-previous-runs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.12.1
         with:
-          access_token: ${{ secrets.GITHUB_TOKEN }}
+          access_token: ${{ secrets.PAT_TOKEN }}
 
   run-bot:
-    needs: cancel-previous
+    needs: cancel-previous-runs
     runs-on: ubuntu-latest
     env:
       DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
@@ -28,9 +26,7 @@ jobs:
           python-version: '3.13'
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Run bot
         run: python bot.py
-

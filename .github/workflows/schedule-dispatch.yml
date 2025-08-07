@@ -1,0 +1,17 @@
+name: Schedule & Dispatch Bot Run
+
+on:
+  schedule:
+    # 每天 6, 12, 18, 24 点触发
+    - cron: '0 6,12,18,0 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  trigger-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger main bot workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Run Discord run.yml
+          token: ${{ secrets.PAT_TOKEN }}

@@ -2,3 +2,4 @@ node_modules
 __pycache__
 assets
 .env
+test.py

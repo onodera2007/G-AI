@@ -17,7 +17,7 @@ bot = commands.Bot(
     intents=discord.Intents.all()
 )
 AI_CHAT_CHANNEL_ID = 1401852954910130176
-
+cookies_path = os.path.join(ROOT_DIR, "cookies.txt")
 def commands(bot):
     @bot.tree.command(name="meme_cn", description="梗")
     async def meme_cn(interaction: discord.Interaction):
@@ -61,7 +61,7 @@ def commands(bot):
         ydl_opts = {
         "format": "bestaudio",
         "noplaylist": True,
-        "cookiefile": "cookies.txt",  # 使用刚写入的 cookies
+        "cookiefile": cookies_path ,  # 使用刚写入的 cookies
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f"ytsearch:{query}", download=False)["entries"][0]
@@ -121,4 +121,5 @@ def channel(bot):
     # 继续处理其他命令
 
         await bot.process_commands(message)
+
 

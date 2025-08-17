@@ -60,9 +60,9 @@ def commands(bot):
 
         # yt-dlp 解析音源
         ydl_opts = {
-        "format": "bestaudio",
-        "noplaylist": True,
-        "cookiefile": cookies_path ,  # 使用刚写入的 cookies
+        'format': 'bestaudio/best',
+        'cookiefile': 'cookies.txt',  # 直接指向根目录的 cookies.txt
+        'extract_flat': True,  # 使用刚写入的 cookies
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f"ytsearch:{query}", download=False)["entries"][0]

@@ -17,6 +17,7 @@ bot = commands.Bot(
     intents=discord.Intents.all()
 )
 AI_CHAT_CHANNEL_ID = 1401852954910130176
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 cookies_path = os.path.join(ROOT_DIR, "cookies.txt")
 def commands(bot):
     @bot.tree.command(name="meme_cn", description="梗")
@@ -121,5 +122,6 @@ def channel(bot):
     # 继续处理其他命令
 
         await bot.process_commands(message)
+
 
 

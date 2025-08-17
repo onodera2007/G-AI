@@ -59,10 +59,10 @@ def commands(bot):
 
         # yt-dlp 解析音源
         ydl_opts = {
-    "format": "bestaudio",
-    "noplaylist": True,
-    "cookiefile": "cookies.txt",  # 使用刚写入的 cookies
-}
+        "format": "bestaudio",
+        "noplaylist": True,
+        "cookiefile": "cookies.txt",  # 使用刚写入的 cookies
+        }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f"ytsearch:{query}", download=False)["entries"][0]
             url = info["url"]
@@ -121,3 +121,4 @@ def channel(bot):
     # 继续处理其他命令
 
         await bot.process_commands(message)
+

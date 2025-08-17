@@ -3,6 +3,7 @@ import random
 from openai import AsyncOpenAI
 import os
 from discord.ext import commands
+import yt_dlp
 ga = False
 try:
     from dotenv import load_dotenv
@@ -18,10 +19,6 @@ bot = commands.Bot(
 AI_CHAT_CHANNEL_ID = 1401852954910130176
 
 def commands(bot):
-    @bot.tree.command(name="test", description="测试命令")
-    async def test(interaction: discord.Interaction):
-        await interaction.response.send_message("🔄 测试成功！")
-
     @bot.tree.command(name="meme_cn", description="梗")
     async def meme_cn(interaction: discord.Interaction):
         # 定义消息列表
@@ -29,12 +26,62 @@ def commands(bot):
             ":raised_hand: :rofl: :raised_back_of_hand:",
             ":raised_hand: <:emoji_name:1401903542377381998> :raised_back_of_hand: ",
             ":raised_hand: :sob: :raised_back_of_hand: ",
-            "那一天的🦑，🦑起来！"
+            "那一天的🦑，🦑起来！",
+            "你待会会掉这么长的血.jpg"
         ]
         random_message = random.choice(messages)
         await interaction.response.send_message(random_message)
-        
-AI_CHAT_CHANNEL_ID = 1401852954910130176  # 替换成你的频道ID
+    @bot.tree.command(name="meme", description="meme")
+    async def meme_en(interaction: discord.Interaction):
+        # 定义消息列表
+        messages = [
+            ":raised_hand: :rofl: :raised_back_of_hand:",
+            ":raised_hand: <:emoji_name:1401903542377381998> :raised_back_of_hand: ",
+            ":raised_hand: :sob: :raised_back_of_hand: ",
+        ]
+        random_message = random.choice(messages)
+        await interaction.response.send_message(random_message)
+    @bot.tree.command(name="play", description="播放音乐 (YouTube 搜索或链接)")
+    async def play(interaction: discord.Interaction,query: str):
+        if interaction.user.voice is None:
+            await interaction.response.send_message("⚠️ 你需要先加入一个语音频道！")
+            return
+
+        channel = interaction.user.voice.channel
+
+        # 如果 bot 不在语音频道，就加入
+        if interaction.guild.voice_client is None:
+            await channel.connect()
+        else:
+            await interaction.guild.voice_client.move_to(channel)
+
+        await interaction.response.send_message(f"🔍 正在搜索：{query}")
+
+        # yt-dlp 解析音源
+        ydl_opts = {"format": "bestaudio", "noplaylist": True}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(f"ytsearch:{query}", download=False)["entries"][0]
+            url = info["url"]
+            title = info["title"]
+
+        # 播放
+        ffmpeg_options = {"options": "-vn"}
+        vc = interaction.guild.voice_client
+        vc.stop()  # 停止之前的音乐
+        source = await discord.FFmpegOpusAudio.from_probe(url, **ffmpeg_options)
+        vc.play(source)
+
+        await interaction.followup.send(f"🎵 正在播放：**{title}**")
+
+
+    @bot.tree.command(name="stop", description="停止播放并离开频道")
+    async def stop(interaction: discord.Interaction):
+        if interaction.guild.voice_client:
+            await interaction.guild.voice_client.disconnect()
+            await interaction.response.send_message("⏹ 已停止播放并退出频道")
+        else:
+            await interaction.response.send_message("⚠️ 我不在语音频道里")
+
 
 def channel(bot):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))

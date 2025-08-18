@@ -44,31 +44,30 @@ def commands(bot):
         await interaction.response.send_message(random_message)
     @bot.tree.command(name="play", description="播放音乐 (YouTube 搜索或链接)")
     async def play(interaction: discord.Interaction, query: str):
-    # 检查用户是否在语音频道
+        # 检查语音频道
         if not interaction.user.voice:
             await interaction.response.send_message("⚠️ 你需要先加入一个语音频道！")
             return
 
-        # 加入/移动到用户频道
-        channel = interaction.user.voice.channel
-        vc = interaction.guild.voice_client
-        if not vc:
-            vc = await channel.connect()
-        else:
-            await vc.move_to(channel)
-
-        await interaction.response.send_message(f"🔍 正在搜索：{query}")
-
-        # yt-dlp 配置（优化版）
-        ydl_opts = {
-        'format': 'bestaudio/best',
-        'cookiefile': 'cookies.txt',
-        'extract_flat': True,
-        'quiet': True,  # 减少日志
-        'no_warnings': True,
-        }
-
         try:
+            channel = interaction.user.voice.channel
+            vc = interaction.guild.voice_client
+            if not vc:
+                vc = await channel.connect()
+            else:
+                await vc.move_to(channel)
+
+            await interaction.response.send_message(f"🔍 正在搜索：{query}")
+
+            # yt-dlp 配置
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'cookiefile': 'cookies.txt',
+                'extract_flat': False,
+                'quiet': True,
+                'no_warnings': True,
+            }
+
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(f"ytsearch:{query}", download=False)
                 if not info or not info['entries']:
@@ -78,23 +77,23 @@ def commands(bot):
                 entry = info['entries'][0]
                 url = entry['url']
                 title = entry['title']
+                print(f"获取到音频流URL: {url}")
 
-            # FFmpeg 配置（带错误处理和重连）
+            # 关键修复：使用正确的音频类
             ffmpeg_options = {
-            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-            'options': '-vn -b:a 96k',  # 优化音质和带宽
+                'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+                'options': '-vn',
             }
 
-            # 播放（优先使用原始流，避免探测失败）
             vc.stop()
-            source = discord.FFmpegOpusAudio(url, **ffmpeg_options)
+            source = discord.FFmpegPCMAudio(url, **ffmpeg_options)  # 使用FFmpegPCMAudio而不是PCMAudio
             vc.play(source)
 
             await interaction.followup.send(f"🎵 正在播放：**{title}**")
 
         except Exception as e:
             await interaction.followup.send(f"❌ 播放失败：{str(e)}")
-            print(f"Error: {e}")
+            print(f"完整错误: {traceback.format_exc()}")
 
 
     @bot.tree.command(name="stop", description="停止播放并离开频道")

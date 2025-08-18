@@ -245,8 +245,9 @@ def commands(bot):
             filename_with_ext = os.path.basename(file_path)
             await interaction.followup.send(f"{filename_with_ext}")
             filename_with_ext = filename_with_ext.split("music")[-1]
-            file_path = os.path.join("music", filename_with_ext)
             file_path = file_path.replace("/", "").replace("\\", "")
+            file_path = os.path.join("music", filename_with_ext)
+            
         try:
             # 加入语音频道
             channel = interaction.user.voice.channel
@@ -255,7 +256,7 @@ def commands(bot):
                 await vc.move_to(channel)
 
             await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")
-
+            await interaction.followip.send(f"当前路径是**{file_path}**")
             ffmpeg_options = {
                 "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
                 "options": "-vn -acodec libopus -b:a 96k"
@@ -303,6 +304,7 @@ def channel(bot):
     # 继续处理其他命令
 
         await bot.process_commands(message)
+
 
 
 

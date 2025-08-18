@@ -243,6 +243,7 @@ def commands(bot):
             
             # 重写路径
             filename_with_ext = os.path.basename(file_path)
+            await interaction.followup.send(f"{filename_with_ext}")
             filename_with_ext = filename_with_ext.split("music")[-1]
             file_path = os.path.join("music", filename_with_ext)
             # 再次检查
@@ -306,6 +307,7 @@ def channel(bot):
     # 继续处理其他命令
 
         await bot.process_commands(message)
+
 
 
 

@@ -8,6 +8,7 @@ import traceback
 import yt_dlp
 from musicCache import get_or_download
 import json
+from discord import FFmpegPCMAudio
 
 ga = False
 try:
@@ -24,6 +25,7 @@ bot = commands.Bot(
 AI_CHAT_CHANNEL_ID = 1401852954910130176
 SEARCH_PROXY = "https://bilibili-proxy.vercel.app/search"
 CACHE_FILE = "music.json"
+MUSIC_FOLDER = "music" 
 if os.path.exists(CACHE_FILE):
     with open(CACHE_FILE, "r", encoding="utf-8") as f:
         music_cache = json.load(f)
@@ -219,6 +221,46 @@ def commands(bot):
             music_list = music_list[:1900] + "\n…"
 
         await interaction.response.send_message(f"🎵 已缓存的曲子标题:\n{music_list}")
+    @bot.tree.command(name="play_cache", description="播放已缓存的音乐")
+    async def play_cache(interaction: discord.Interaction, title: str):
+        # 检查用户是否在语音频道
+        if not interaction.user.voice:
+            await interaction.response.send_message("⚠️ 请先加入语音频道")
+            return
+
+        # 查找对应缓存
+        matched = next((item for item in music_cache if item.get("title") == title), None)
+        if not matched:
+            await interaction.response.send_message(f"❌ 未找到标题为 '{title}' 的缓存曲子")
+            return
+
+        # 构建文件路径
+        file_path = os.path.join(MUSIC_FOLDER, matched.get("file", matched.get("title")))  # file 或 title
+        if not os.path.exists(file_path):
+            await interaction.response.send_message(f"❌ 文件不存在: {file_path}")
+            return
+
+        try:
+            # 加入语音频道
+            channel = interaction.user.voice.channel
+            vc = interaction.guild.voice_client or await channel.connect()
+            if vc.channel != channel:
+                await vc.move_to(channel)
+
+            await interaction.response.send_message(f"🎵 正在播放缓存曲子: **{title}**")
+
+            ffmpeg_options = {
+                "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+                "options": "-vn -acodec libopus -b:a 96k"
+            }
+
+            vc.stop()
+            source = discord.FFmpegPCMAudio(file_path)
+            vc.play(source)
+
+        except Exception as e:
+            await interaction.followup.send(f"❌ 播放失败: {str(e)}")
+            print(f"完整错误: {e}")    
 def channel(bot):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     @bot.event

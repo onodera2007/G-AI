@@ -16,14 +16,9 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Write cookies.txt
-        run: echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
         
-      - name: Install FFmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
+      - name: Setup FFmpeg
+        uses: amondnet/ffmpeg-action@v1
           
       - name: Setup Python
         uses: actions/setup-python@v4

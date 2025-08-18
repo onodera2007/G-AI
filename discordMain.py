@@ -1,8 +1,10 @@
 import discord
 import random
 from openai import AsyncOpenAI
+from googleapiclient.discovery import build
 import os
 from discord.ext import commands
+import traceback
 import yt_dlp
 ga = False
 try:
@@ -16,6 +18,7 @@ bot = commands.Bot(
     command_prefix='!',
     intents=discord.Intents.all()
 )
+YOUTUBE_API_KEY = "AIzaSyAGByEES4phlLYo6G2pG_DfIsPHTFG0BRI"
 AI_CHAT_CHANNEL_ID = 1401852954910130176
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 cookies_path = os.path.join(ROOT_DIR, "cookies.txt")
@@ -42,57 +45,65 @@ def commands(bot):
         ]
         random_message = random.choice(messages)
         await interaction.response.send_message(random_message)
-    @bot.tree.command(name="play", description="播放音乐 (YouTube 搜索或链接)")
+    @bot.tree.command(name="play", description="播放音乐")
     async def play(interaction: discord.Interaction, query: str):
-        # 检查语音频道
         if not interaction.user.voice:
-            await interaction.response.send_message("⚠️ 你需要先加入一个语音频道！")
+            await interaction.response.send_message("⚠️ 请先加入语音频道")
             return
 
         try:
+            # 加入语音频道
             channel = interaction.user.voice.channel
-            vc = interaction.guild.voice_client
-            if not vc:
-                vc = await channel.connect()
-            else:
+            vc = interaction.guild.voice_client or await channel.connect()
+            if vc.channel != channel:
                 await vc.move_to(channel)
 
-            await interaction.response.send_message(f"🔍 正在搜索：{query}")
+            await interaction.response.send_message(f"🔍 搜索中: {query}")
 
-            # yt-dlp 配置
+            # 第一步：用API搜索视频
+            youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
+            search_response = youtube.search().list(
+                q=query,
+                part="id,snippet",
+                maxResults=1,
+                type="video"
+            ).execute()
+
+            if not search_response.get("items"):
+                await interaction.followup.send("❌ 找不到视频")
+                return
+
+            video_id = search_response["items"][0]["id"]["videoId"]
+            title = search_response["items"][0]["snippet"]["title"]
+
+            # 第二步：用yt-dlp获取音频流（不触发验证）
             ydl_opts = {
                 'format': 'bestaudio/best',
-                'cookiefile': 'cookies.txt',
-                'extract_flat': False,
                 'quiet': True,
                 'no_warnings': True,
+                'extract_flat': False,
+                'socket_timeout': 30
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(f"ytsearch:{query}", download=False)
-                if not info or not info['entries']:
-                    await interaction.followup.send("❌ 找不到视频！")
-                    return
+                info = ydl.extract_info(f"https://youtu.be/{video_id}", download=False)
+                url = info['url']
+                print(f"音频流URL: {url}")
 
-                entry = info['entries'][0]
-                url = entry['url']
-                title = entry['title']
-                print(f"获取到音频流URL: {url}")
-
-            # 关键修复：使用正确的音频类
+            # 播放设置
             ffmpeg_options = {
                 'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-                'options': '-vn',
+                'options': '-vn -acodec libopus -b:a 96k'
             }
 
             vc.stop()
-            source = discord.FFmpegPCMAudio(url, **ffmpeg_options)  # 使用FFmpegPCMAudio而不是PCMAudio
+            source = discord.FFmpegOpusAudio(url, **ffmpeg_options)
             vc.play(source)
 
-            await interaction.followup.send(f"🎵 正在播放：**{title}**")
+            await interaction.followup.send(f"🎵 正在播放: **{title}**")
 
         except Exception as e:
-            await interaction.followup.send(f"❌ 播放失败：{str(e)}")
+            await interaction.followup.send(f"❌ 播放失败: {str(e)}")
             print(f"完整错误: {traceback.format_exc()}")
 
 

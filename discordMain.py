@@ -236,10 +236,19 @@ def commands(bot):
             return
 
         # 构建文件路径
-        file_path = os.path.join(MUSIC_FOLDER, matched.get("file", matched.get("title")))  # file 或 title
+        file_path = os.path.join(MUSIC_FOLDER, matched.get("file", matched.get("title"))) 
+
         if not os.path.exists(file_path):
-            await interaction.response.send_message(f"❌ 文件不存在: {file_path}")
-            return
+            await interaction.response.send_message(f"❌ 文件不存在: {file_path}，重写中...")
+            filename_with_ext = os.path.basename(file_path) 
+            print(filename_with_ext)  # 输出: インフィニティコスモ.mp3
+            filename_with_ext = filename_with_ext.split("music")[-1]
+            print(filename_with_ext)
+            file_path = os.path.join("music", filename_with_ext)
+            print(file_path)  # 输出: music/インフィニティコスモ.mp3
+            if not os.path.exists(file_path):
+                await interaction.response.send_message(f"❌ 文件仍然不存在: {file_path}")
+                return
 
         try:
             # 加入语音频道
@@ -261,21 +270,8 @@ def commands(bot):
             vc.play(source)
 
         except Exception as e:
-            try:
-                 # 提取文件名
-                filename_with_ext = os.path.basename(file_path)  # e.g. インフィニティコスモ.mp3
-                  # e.g. インフィニティコスモ
-                # 构建相对路径到 music 文件夹
-                file_path = os.path.join("music", filename_with_ext)  # e.g. music/インフィニティコスモ.mp3
-
-                # 播放音频
-                source = discord.FFmpegPCMAudio(file_path)
-                await interaction.response.send_message(f"尝试播放缓存曲子: {file_path}")
-                vc.play(source)
-            except Exception as e:
-                print(f"播放缓存曲子时发生错误: {e}")
-                await interaction.followup.send(f"❌ 播放失败: {str(e)}")
-
+            await interaction.response.send_message(f"❌ 播放失败: {str(e)}")
+            print(f"完整错误: {traceback.format_exc()}")
 def channel(bot):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     @bot.event

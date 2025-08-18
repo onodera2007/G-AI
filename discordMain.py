@@ -194,7 +194,32 @@ def commands(bot):
                 pass
 
             await interaction.followup.send(error_msg)
+    @bot.tree.command(name="play_musicfile", description="播放本地或上传的音频文件")
+    async def play_musicFile(interaction: discord.Interaction, file: discord.Attachment):
+        """播放用户上传的音频文件"""
+        try:
+            # 检查用户是否在语音频道
+            if not interaction.user.voice:
+                await interaction.response.send_message("⚠️ 请先加入语音频道")
+                return
 
+            # 连接语音频道
+            channel = interaction.user.voice.channel
+            vc = interaction.guild.voice_client or await channel.connect()
+            if vc.channel != channel:
+                await vc.move_to(channel)
+
+            await interaction.response.send_message(f"🎵 正在播放文件: **{file.filename}**")
+
+            # 下载文件到临时路径（可选，也可以直接使用 URL）
+            file_path = f"./temp_{file.filename}"
+            await file.save(file_path)
+
+            source = discord.FFmpegPCMAudio(file_path)
+            vc.play(source)
+        except Exception as e:
+            await interaction.followup.send(f"❌ 播放失败: {str(e)}")
+            print(f"完整错误: {traceback.format_exc()}")
 
 def channel(bot):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))

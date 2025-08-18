@@ -1,14 +1,15 @@
-import discord
-import random
-from openai import AsyncOpenAI
-from googleapiclient.discovery import build
-import os
-from discord.ext import commands
-import traceback
-import yt_dlp
-from musicCache import get_or_download
+# 标准库
 import json
-from discord import FFmpegPCMAudio
+import os
+import random
+import traceback
+# 第三方库
+import discord
+from discord.ext import commands
+import yt_dlp
+from openai import AsyncOpenAI
+# 本地模块
+from musicCache import get_or_download
 
 ga = False
 try:

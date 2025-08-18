@@ -104,7 +104,7 @@ def commands(bot):
         except Exception as e:
             await interaction.followup.send(f"❌ 播放失败: {str(e)}")
             print(f"完整错误: {traceback.format_exc()}")
-    @bot.tree.command(name="play_bilibili", description="播放音乐(Bilibili)")
+    @bot.tree.command(name="play_bilibili", description="播放音乐(Bilibili)→弃")
     async def play(interaction: discord.Interaction, query: str):
         if not interaction.user.voice:
             await interaction.response.send_message("⚠️ 请先加入语音频道")
@@ -194,7 +194,7 @@ def commands(bot):
                 pass
 
             await interaction.followup.send(error_msg)
-    @bot.tree.command(name="play_musicfile", description="播放本地或上传的音频文件")
+    @bot.tree.command(name="play_musicfile", description="播放本地或上传的音频文件(极不稳定！)")
     async def play_musicFile(interaction: discord.Interaction, file: discord.Attachment):
         """播放用户上传的音频文件"""
         try:

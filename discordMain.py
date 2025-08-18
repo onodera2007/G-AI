@@ -257,11 +257,21 @@ def commands(bot):
 
             vc.stop()
             source = discord.FFmpegPCMAudio(file_path)
+            print(f"正在播放缓存曲子: {file_path}")
             vc.play(source)
 
         except Exception as e:
-            await interaction.followup.send(f"❌ 播放失败: {str(e)}")
-            print(f"完整错误: {e}")    
+            try:
+                filename_with_ext = os.path.basename(file_path)  # 输出: インフィニティコスモ.mp3
+                # 去掉扩展名
+                file_path = os.path.join("music", filename_with_ext)
+                source = discord.FFmpegPCMAudio(file_path)
+                print(f"尝试播放缓存曲子: {file_path}")
+                vc.play(source)
+            except Exception as e:
+                print(f"播放缓存曲子时发生错误: {e}")
+                await interaction.followup.send(f"❌ 播放失败: {str(e)}")
+
 def channel(bot):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     @bot.event

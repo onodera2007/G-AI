@@ -246,7 +246,7 @@ def commands(bot):
             await interaction.followup.send(f"{filename_with_ext}")
             filename_with_ext = filename_with_ext.split("music")[-1]
             file_path = os.path.join("music", filename_with_ext)
-
+            file_path = file_path.replace("\\", "/")
         try:
             # 加入语音频道
             channel = interaction.user.voice.channel
@@ -303,6 +303,7 @@ def channel(bot):
     # 继续处理其他命令
 
         await bot.process_commands(message)
+
 
 
 

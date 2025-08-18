@@ -6,6 +6,7 @@ import os
 from discord.ext import commands
 import traceback
 import yt_dlp
+import aiohttp
 ga = False
 try:
     from dotenv import load_dotenv
@@ -18,10 +19,8 @@ bot = commands.Bot(
     command_prefix='!',
     intents=discord.Intents.all()
 )
-YOUTUBE_API_KEY = "AIzaSyAGByEES4phlLYo6G2pG_DfIsPHTFG0BRI"
 AI_CHAT_CHANNEL_ID = 1401852954910130176
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-cookies_path = os.path.join(ROOT_DIR, "cookies.txt")
+SEARCH_PROXY = "https://bilibili-proxy.vercel.app/search"
 def commands(bot):
     @bot.tree.command(name="meme_cn", description="梗")
     async def meme_cn(interaction: discord.Interaction):
@@ -45,7 +44,7 @@ def commands(bot):
         ]
         random_message = random.choice(messages)
         await interaction.response.send_message(random_message)
-    @bot.tree.command(name="play", description="播放音乐")
+    @bot.tree.command(name="play_youtube", description="播放音乐(YouTube)→弃")
     async def play(interaction: discord.Interaction, query: str):
         if not interaction.user.voice:
             await interaction.response.send_message("⚠️ 请先加入语音频道")
@@ -61,7 +60,7 @@ def commands(bot):
             await interaction.response.send_message(f"🔍 搜索中: {query}")
 
             # 第一步：用API搜索视频
-            youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
+            youtube = build("youtube", "v3", developerKey="AIzaSyAGByEES4phlLYo6G2pG_DfIsPHTFG0BRI")
             search_response = youtube.search().list(
                 q=query,
                 part="id,snippet",
@@ -105,43 +104,95 @@ def commands(bot):
         except Exception as e:
             await interaction.followup.send(f"❌ 播放失败: {str(e)}")
             print(f"完整错误: {traceback.format_exc()}")
+    @bot.tree.command(name="play_bilibili", description="播放音乐(Bilibili)")
+    async def play(interaction: discord.Interaction, query: str):
+        if not interaction.user.voice:
+            await interaction.response.send_message("⚠️ 请先加入语音频道")
+            return
 
+        try:
+            # 加入语音频道
+            channel = interaction.user.voice.channel
+            vc = interaction.guild.voice_client or await channel.connect()
+            if vc.channel != channel:
+                await vc.move_to(channel)
 
+            await interaction.response.send_message(f"🔍 搜索中: {query}")
+
+            ydl_opts = {
+                "format": "bestaudio/best",
+                "quiet": True,
+                "no_warnings": True,
+                "cookies": "cookies.txt",  # 如果需要登录，可提前导出 cookies
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                # 判断输入类型：BV号或关键字
+                if query.startswith("BV") and len(query) == 12:  # BV号长度固定12位
+                    video_url = f"https://www.bilibili.com/video/{query}"
+                    info = ydl.extract_info(video_url, download=False)
+                else:
+                    # 关键字搜索
+                    info = ydl.extract_info(f"bilisearch:{query}", download=False)
+                    if not info or "entries" not in info or len(info["entries"]) == 0:
+                        await interaction.followup.send("❌ 没有找到视频")
+                        return
+                    info = info["entries"][0]
+
+            # 获取音频 URL
+            audio_url = info["url"]
+            title = info.get("title", "未知标题")
+            extractor = info.get("extractor")
+
+            print("网站:", extractor)
+            print("标题:", title)
+            print("音频 URL:", audio_url)
+
+            # 播放设置
+            ffmpeg_options = {
+                "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+                "options": "-vn -acodec libopus -b:a 96k"
+            }
+
+            vc.stop()
+            source = discord.FFmpegOpusAudio(audio_url, **ffmpeg_options)
+            vc.play(source)
+
+            await interaction.followup.send(f"🎵 正在播放: **{title}**")
+
+        except Exception as e:
+            await interaction.followup.send(f"❌ 播放失败: {str(e)}")
+            
+            print(f"完整错误: {traceback.format_exc()}")
     @bot.tree.command(name="stop", description="停止播放并离开频道")
     async def stop(interaction: discord.Interaction):
-        """安全停止播放并断开语音连接"""
         try:
-            # 延迟响应防止超时
-            await interaction.response.defer(thinking=True)
-            
+            await interaction.response.send_message("⏳ 正在停止播放...")
+
             vc = interaction.guild.voice_client
             if not vc:
                 await interaction.followup.send("⚠️ 机器人未连接至语音频道")
                 return
 
-            # 停止所有播放
-            if vc.is_playing() or vc.is_paused():
-                vc.stop()
-            
-            # 安全断开连接
+            # 停止播放
+            vc.stop()
+
+            # 断开连接
             await vc.disconnect(force=False)
-            
-            # 清理资源
-            if hasattr(vc, 'cleanup'):
-                vc.cleanup()
-                
+
             await interaction.followup.send("⏹️ 已停止播放并退出频道")
 
         except Exception as e:
             error_msg = f"❌ 停止时发生错误: {str(e)}"
             print(f"{error_msg}\n{traceback.format_exc()}")
-            
+
             # 尝试强制断开
             try:
-                await interaction.guild.voice_client.disconnect(force=True)
+                if interaction.guild.voice_client:
+                    await interaction.guild.voice_client.disconnect(force=True)
             except:
                 pass
-                
+
             await interaction.followup.send(error_msg)
 
 

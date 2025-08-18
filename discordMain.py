@@ -254,7 +254,7 @@ def commands(bot):
             if vc.channel != channel:
                 await vc.move_to(channel)
 
-            await interaction.response.send_message(f"🎵 正在播放缓存曲子: **{title}**")
+            await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")
 
             ffmpeg_options = {
                 "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
@@ -267,7 +267,7 @@ def commands(bot):
             vc.play(source)
 
         except Exception as e:
-            await interaction.response.send_message(f"❌ 播放失败: {str(e)}")
+            await interaction.followup.send(f"❌ 播放失败: {str(e)}")
             print(f"完整错误: {traceback.format_exc()}")
 def channel(bot):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -303,6 +303,7 @@ def channel(bot):
     # 继续处理其他命令
 
         await bot.process_commands(message)
+
 
 
 

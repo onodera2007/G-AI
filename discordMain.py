@@ -264,13 +264,13 @@ def commands(bot):
             try:
                  # 提取文件名
                 filename_with_ext = os.path.basename(file_path)  # e.g. インフィニティコスモ.mp3
-
+                  # e.g. インフィニティコスモ
                 # 构建相对路径到 music 文件夹
                 file_path = os.path.join("music", filename_with_ext)  # e.g. music/インフィニティコスモ.mp3
 
                 # 播放音频
                 source = discord.FFmpegPCMAudio(file_path)
-                print(f"尝试播放缓存曲子: {file_path}")
+                await interaction.response.send_message(f"尝试播放缓存曲子: {file_path}")
                 vc.play(source)
             except Exception as e:
                 print(f"播放缓存曲子时发生错误: {e}")

@@ -240,14 +240,14 @@ def commands(bot):
 
         if not os.path.exists(file_path):
             await interaction.response.send_message(f"❌ 文件不存在: {file_path}，重写中...")
-            filename_with_ext = os.path.basename(file_path) 
-            print(filename_with_ext)  # 输出: インフィニティコスモ.mp3
-            filename_with_ext = filename_with_ext.split("music")[-1]
-            print(filename_with_ext)
-            file_path = os.path.join("music", filename_with_ext)
-            print(file_path)  # 输出: music/インフィニティコスモ.mp3
+            
+            # 重写路径
+            filename_with_ext = os.path.basename(file_path)
+            file_path = os.path.join("music", filename_with_ext).replace("\\", "/")
+            
+            # 再次检查
             if not os.path.exists(file_path):
-                await interaction.response.send_message(f"❌ 文件仍然不存在: {file_path}")
+                await interaction.followup.send(f"❌ 文件仍然不存在: {file_path}")
                 return
 
         try:
@@ -306,6 +306,7 @@ def channel(bot):
     # 继续处理其他命令
 
         await bot.process_commands(message)
+
 
 
 

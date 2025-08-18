@@ -109,11 +109,40 @@ def commands(bot):
 
     @bot.tree.command(name="stop", description="停止播放并离开频道")
     async def stop(interaction: discord.Interaction):
-        if interaction.guild.voice_client:
-            await interaction.guild.voice_client.disconnect()
-            await interaction.response.send_message("⏹ 已停止播放并退出频道")
-        else:
-            await interaction.response.send_message("⚠️ 我不在语音频道里")
+        """安全停止播放并断开语音连接"""
+        try:
+            # 延迟响应防止超时
+            await interaction.response.defer(thinking=True)
+            
+            vc = interaction.guild.voice_client
+            if not vc:
+                await interaction.followup.send("⚠️ 机器人未连接至语音频道")
+                return
+
+            # 停止所有播放
+            if vc.is_playing() or vc.is_paused():
+                vc.stop()
+            
+            # 安全断开连接
+            await vc.disconnect(force=False)
+            
+            # 清理资源
+            if hasattr(vc, 'cleanup'):
+                vc.cleanup()
+                
+            await interaction.followup.send("⏹️ 已停止播放并退出频道")
+
+        except Exception as e:
+            error_msg = f"❌ 停止时发生错误: {str(e)}"
+            print(f"{error_msg}\n{traceback.format_exc()}")
+            
+            # 尝试强制断开
+            try:
+                await interaction.guild.voice_client.disconnect(force=True)
+            except:
+                pass
+                
+            await interaction.followup.send(error_msg)
 
 
 def channel(bot):

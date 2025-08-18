@@ -2,3 +2,4 @@ discord.py==2.5.2
 openai==1.99.1
 yt-dlp
 PyNaCl
+google-api-python-client

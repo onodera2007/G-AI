@@ -262,7 +262,6 @@ def commands(bot):
 
             if vc.is_playing():
                 vc.stop()
-            file_path = f"{title}.mp3"  # 假设缓存的文件名就是这样
             source = discord.FFmpegPCMAudio(file_path)
             await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")
             vc.play(source)

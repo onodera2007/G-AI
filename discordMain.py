@@ -3,6 +3,7 @@ import json
 import os
 import random
 import traceback
+import tempfile
 # 第三方库
 import discord
 from discord.ext import commands
@@ -60,8 +61,6 @@ def commands(bot):
     @bot.tree.command(name="play_youtube", description="播放音乐(YouTube)→可缓存播放")
     async def play(interaction: discord.Interaction, query: str):
         await interaction.response.send_message(f"🔍 正在搜索: {query}")
-
-        # yt-dlp 搜索
         ydl_opts = {
             "quiet": True,
             "default_search": "ytsearch1",
@@ -108,50 +107,50 @@ def commands(bot):
 
             await interaction.response.send_message(f"🔍 搜索中: {query}")
 
-            ydl_opts = {
-                "format": "bestaudio/best",
-                "quiet": True,
-                "no_warnings": True,
-                "cookies": "cookies.txt",  # 如果需要登录，可提前导出 cookies
-            }
+            # 创建临时目录存放下载文件
+            with tempfile.TemporaryDirectory() as tmpdir:
 
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                # 判断输入类型：BV号或关键字
-                if query.startswith("BV") and len(query) == 12:  # BV号长度固定12位
-                    video_url = f"https://www.bilibili.com/video/{query}"
-                    info = ydl.extract_info(video_url, download=False)
-                else:
-                    # 关键字搜索
-                    info = ydl.extract_info(f"bilisearch:{query}", download=False)
-                    if not info or "entries" not in info or len(info["entries"]) == 0:
-                        await interaction.followup.send("❌ 没有找到视频")
-                        return
-                    info = info["entries"][0]
+                ydl_opts = {
+                    "format": "bestvideo+bestaudio/best",
+                    "outtmpl": os.path.join(tmpdir, "%(title)s.%(ext)s"),
+                    "cookies": "cookies.txt",
+                    "quiet": False,
+                    "no_warnings": False,
+                    "verbose": True,
+                    "postprocessors": [
+                        {
+                            "key": "FFmpegExtractAudio",
+                            "preferredcodec": "mp3",
+                            "preferredquality": "192",
+                        }
+                    ],
+                }
 
-            # 获取音频 URL
-            audio_url = info["url"]
-            title = info.get("title", "未知标题")
-            extractor = info.get("extractor")
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    # 判断输入类型：BV号或关键字
+                    if query.startswith("BV") and len(query) == 12:
+                        video_url = f"https://www.bilibili.com/video/{query}"
+                        info = ydl.extract_info(video_url, download=True)
+                    else:
+                        info = ydl.extract_info(f"bilisearch:{query}", download=True)
+                        if not info or "entries" not in info or len(info["entries"]) == 0:
+                            await interaction.followup.send("❌ 没有找到视频")
+                            return
+                        info = info["entries"][0]
 
-            print("网站:", extractor)
-            print("标题:", title)
-            print("音频 URL:", audio_url)
+                # 获取 mp3 文件路径
+                mp3_filename = ydl.prepare_filename(info)
+                mp3_filename = os.path.splitext(mp3_filename)[0] + ".mp3"
 
-            # 播放设置
-            ffmpeg_options = {
-                "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
-                "options": "-vn -acodec libopus -b:a 96k"
-            }
+                vc.stop()
+                source = discord.FFmpegOpusAudio(mp3_filename)
+                vc.play(source)
 
-            vc.stop()
-            source = discord.FFmpegOpusAudio(audio_url, **ffmpeg_options)
-            vc.play(source)
-
-            await interaction.followup.send(f"🎵 正在播放: **{title}**")
+                await interaction.followup.send(f"🎵 正在播放: **{info.get('title','未知标题')}**")
 
         except Exception as e:
             await interaction.followup.send(f"❌ 播放失败: {str(e)}")
-            
+            import traceback
             print(f"完整错误: {traceback.format_exc()}")
     @bot.tree.command(name="stop", description="停止播放并离开频道")
     async def stop(interaction: discord.Interaction):

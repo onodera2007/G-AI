@@ -238,9 +238,7 @@ def commands(bot):
         # 构建文件路径
         file_path = os.path.join(MUSIC_FOLDER, matched.get("file", matched.get("title"))) 
 
-        if not os.path.exists(file_path):
-            await interaction.response.send_message(f"❌ 文件不存在: {file_path}，重写中...")
-            
+        if not os.path.exists(file_path):            
             # 重写路径
             filename_with_ext = os.path.basename(file_path)
             await interaction.followup.send(f"{filename_with_ext}")
@@ -256,9 +254,7 @@ def commands(bot):
             if vc.channel != channel:
                 await vc.move_to(channel)
 
-            await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")
-            await interaction.followup.send(f"当前路径是**{file_path}**")
-    
+            await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")    
             source = discord.FFmpegPCMAudio(file_path)
             print(f"正在播放缓存曲子: {file_path}")
             vc.play(source)

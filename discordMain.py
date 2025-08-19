@@ -258,10 +258,6 @@ def commands(bot):
 
             await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")
             await interaction.followup.send(f"当前路径是**{file_path}**")
-            ffmpeg_options = {
-                "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
-                "options": "-vn -acodec libopus -b:a 96k"
-            }
     
             source = discord.FFmpegPCMAudio(file_path)
             print(f"正在播放缓存曲子: {file_path}")
@@ -269,7 +265,7 @@ def commands(bot):
 
         except Exception as e:
             await interaction.followup.send(f"❌ 播放失败: {str(e)}")
-            print(f"完整错误: {traceback.format_exc()}")
+            await interaction.followup.send(f"完整错误: {traceback.format_exc()}")
 def channel(bot):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     @bot.event

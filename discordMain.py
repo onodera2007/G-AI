@@ -249,7 +249,6 @@ def commands(bot):
             file_path = file_path.replace("\\", "")
             
         try:
-            await interaction.response.defer(thinking=True)
             # 加入语音频道
             if not interaction.user.voice:
                 await interaction.followup.send("⚠️ 请先加入语音频道")
@@ -265,7 +264,6 @@ def commands(bot):
 
             if vc.is_playing():
                 vc.stop()
-            await interaction.response.defer(thinking=True)
             file_path = f"{title}.mp3"  # 假设缓存的文件名就是这样
             source = discord.FFmpegPCMAudio(file_path)
             vc.play(source)

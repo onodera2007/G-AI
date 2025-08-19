@@ -249,21 +249,33 @@ def commands(bot):
             file_path = file_path.replace("\\", "")
             
         try:
+            await interaction.response.defer(thinking=True)
             # 加入语音频道
+            if not interaction.user.voice:
+                await interaction.followup.send("⚠️ 请先加入语音频道")
+                return
+
             channel = interaction.user.voice.channel
-            vc = interaction.guild.voice_client or await channel.connect()
-            if vc.channel != channel:
+            vc = interaction.guild.voice_client
+
+            if vc is None or not vc.is_connected():
+                vc = await channel.connect()
+            elif vc.channel != channel:
                 await vc.move_to(channel)
+
             if vc.is_playing():
                 vc.stop()
-            await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")    
+            await interaction.response.defer(thinking=True)
+            file_path = f"{title}.mp3"  # 假设缓存的文件名就是这样
             source = discord.FFmpegPCMAudio(file_path)
-            print(f"正在播放缓存曲子: {file_path}")
             vc.play(source)
 
+            print(f"正在播放缓存曲子: {file_path}")
+            await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")
+
         except Exception as e:
-            await interaction.followup.send(f"❌ 播放失败: {str(e)}")
-            await interaction.followup.send(f"完整错误: {traceback.format_exc()}")
+            # 只发一次错误消息，避免重复 webhook
+            await interaction.followup.send(f"❌ 播放失败:\n```{traceback.format_exc()}```")
 def channel(bot):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     @bot.event

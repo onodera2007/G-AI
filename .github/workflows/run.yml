@@ -19,7 +19,7 @@ jobs:
         
       - name: Setup FFmpeg
         uses: 
-          FedericoCarboni/setup-ffmpeg@v2
+          FedericoCarboni/setup-ffmpeg@v3
         
       - name: Setup Python
         uses: actions/setup-python@v4

@@ -254,7 +254,8 @@ def commands(bot):
             vc = interaction.guild.voice_client or await channel.connect()
             if vc.channel != channel:
                 await vc.move_to(channel)
-
+            if vc.is_playing():
+                vc.stop()
             await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")    
             source = discord.FFmpegPCMAudio(file_path)
             print(f"正在播放缓存曲子: {file_path}")

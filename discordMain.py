@@ -224,15 +224,16 @@ def commands(bot):
         await interaction.response.send_message(f"🎵 已缓存的曲子标题:\n{music_list}")
     @bot.tree.command(name="play_cache", description="播放已缓存的音乐")
     async def play_cache(interaction: discord.Interaction, title: str):
+        await interaction.response.defer(thinking=True)
         # 检查用户是否在语音频道
         if not interaction.user.voice:
-            await interaction.response.send_message("⚠️ 请先加入语音频道")
+            await interaction.followup.send("⚠️ 请先加入语音频道")
             return
 
         # 查找对应缓存
         matched = next((item for item in music_cache if item.get("title") == title), None)
         if not matched:
-            await interaction.response.send_message(f"❌ 未找到标题为 '{title}' 的缓存曲子")
+            await interaction.followup.send(f"❌ 未找到标题为 '{title}' 的缓存曲子")
             return
 
         # 构建文件路径
@@ -254,7 +255,7 @@ def commands(bot):
             if vc.channel != channel:
                 await vc.move_to(channel)
 
-            await interaction.response.send_message(f"🎵 正在播放缓存曲子: **{title}**")    
+            await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")    
             source = discord.FFmpegPCMAudio(file_path)
             print(f"正在播放缓存曲子: {file_path}")
             vc.play(source)

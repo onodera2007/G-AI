@@ -246,7 +246,7 @@ def commands(bot):
             await interaction.followup.send(f"{filename_with_ext}")
             filename_with_ext = filename_with_ext.split("music")[-1]
             file_path = file_path.replace("/", "").replace("\\", "")
-            file_path = os.path.join("music/", filename_with_ext)
+            file_path = os.path.join("music", filename_with_ext)
             file_path = file_path.replace("\\", "")
             
         try:
@@ -262,8 +262,7 @@ def commands(bot):
                 "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
                 "options": "-vn -acodec libopus -b:a 96k"
             }
-
-            vc.stop()
+    
             source = discord.FFmpegPCMAudio(file_path)
             print(f"正在播放缓存曲子: {file_path}")
             vc.play(source)
@@ -305,9 +304,6 @@ def channel(bot):
     # 继续处理其他命令
 
         await bot.process_commands(message)
-
-
-
 
 
 

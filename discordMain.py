@@ -6,6 +6,7 @@ import traceback
 # 第三方库
 import discord
 from discord.ext import commands
+from discord.errors import ConnectionClosed
 import yt_dlp
 from openai import AsyncOpenAI
 # 本地模块
@@ -242,11 +243,11 @@ def commands(bot):
         if not os.path.exists(file_path):            
             # 重写路径
             filename_with_ext = os.path.basename(file_path)
-            await interaction.followup.send(f"{filename_with_ext}")
             filename_with_ext = filename_with_ext.split("music")[-1]
             file_path = file_path.replace("/", "").replace("\\", "")
             file_path = os.path.join("music", filename_with_ext)
             file_path = file_path.replace("\\", "")
+            await interaction.followup.send(f"{file_path}")
             
         try:
             # 加入语音频道
@@ -255,21 +256,16 @@ def commands(bot):
                 return
 
             channel = interaction.user.voice.channel
-            vc = interaction.guild.voice_client
-
-            if vc is None or not vc.is_connected():
-                vc = await channel.connect()
-            elif vc.channel != channel:
+            vc = interaction.guild.voice_client or await channel.connect()
+            if vc.channel != channel:
                 await vc.move_to(channel)
 
             if vc.is_playing():
                 vc.stop()
             file_path = f"{title}.mp3"  # 假设缓存的文件名就是这样
             source = discord.FFmpegPCMAudio(file_path)
-            vc.play(source)
-
-            print(f"正在播放缓存曲子: {file_path}")
             await interaction.followup.send(f"🎵 正在播放缓存曲子: **{title}**")
+            vc.play(source)
 
         except Exception as e:
             # 只发一次错误消息，避免重复 webhook

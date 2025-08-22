@@ -273,10 +273,10 @@ def commands(bot):
             await interaction.followup.send(f"❌ 播放失败:\n```{traceback.format_exc()}```")
     @bot.tree.command(name="reset_ai", description="重置 AI 聊天")
     async def reset_ai(interaction: discord.Interaction):
-        user_id = interaction.author.id
+        user_id = interaction.user.id  # ✅ 使用 user 而不是 author
         if user_id in user_histories:
             del user_histories[user_id]
-        await interaction.send("✅ AI 历史已重置。")
+        await interaction.response.send_message("✅ AI 历史已重置。")
 def channel(bot):
     client = OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),

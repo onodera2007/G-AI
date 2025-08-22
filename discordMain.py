@@ -277,39 +277,48 @@ def channel(bot):
     async def on_message(message: discord.Message):
         if message.author == bot.user:
             return
-        # 只在特定频道回复
         if message.channel.id not in AI_CHAT_CHANNEL_IDS:
             return
+
         user_input = message.content
         if message.channel.id == 1408292710011502632:
-            try:
-                response = await client.chat.completions.create(
-                model="deepseek-v3-250324",
-                messages=[
-                    {"role": "system", "content": "你是一个乐于助人的 Discord 聊天机器人"},
-                    {"role": "user", "content": user_input}
-                ],
-                temperature=0.7,
-                max_tokens=200
-            )
-                reply = response.choices[0].message.content.strip()
-            except Exception as e:
-                reply = f"出错了：{e}"
+            system_content = "你是一个乐于助人的 Discord 聊天机器人"
         elif message.channel.id == 1408292850294198332:
-            try:
-                response = await client.chat.completions.create(
+            system_content = "你是一个猫娘"
+        else:
+            system_content = "你是一个乐于助人的机器人"
+
+        try:
+            # 创建流对象
+            response_stream = client.chat.completions.create(
                 model="deepseek-v3-250324",
                 messages=[
-                    {"role": "system", "content": "你是一个猫娘"},
+                    {"role": "system", "content": system_content},
                     {"role": "user", "content": user_input}
                 ],
-                temperature=0.7,
-                max_tokens=200
+                stream=True
             )
-                reply = response.choices[0].message.content.strip()
-            except Exception as e:
-                reply = f"出错了：{e}"
-        await message.channel.send(reply)
+
+            # 先发送占位消息
+            sent_message = await message.channel.send("⏳ 生成中...")
+
+            reply = ""
+            sent_message = await message.channel.send("⏳ 生成中...")
+
+            for chunk in response_stream:
+                # 获取增量内容
+                delta_text = ""
+                for choice in chunk.choices:
+                    content = getattr(choice.delta, "content", None)
+                    if content:
+                        delta_text += content
+
+                if delta_text:
+                    reply += delta_text
+                    await sent_message.edit(content=reply)
+        except Exception as e:
+            await message.channel.send(f"出错了：{e}")
+
         await bot.process_commands(message)
 
 

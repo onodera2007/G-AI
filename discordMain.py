@@ -33,7 +33,11 @@ if os.path.exists(CACHE_FILE):
         music_cache = json.load(f)
 else:
     music_cache = {}
-
+user_histories = {}
+SYSTEM_PROMPT = {
+    1408292710011502632: "你是一个乐于助人的 Discord 聊天机器人",
+    1408292850294198332: "你是一个猫娘"
+}
 def commands(bot):
     @bot.tree.command(name="meme_cn", description="梗")
     async def meme_cn(interaction: discord.Interaction):
@@ -267,6 +271,12 @@ def commands(bot):
         except Exception as e:
             # 只发一次错误消息，避免重复 webhook
             await interaction.followup.send(f"❌ 播放失败:\n```{traceback.format_exc()}```")
+    @bot.tree.command(name="reset_ai", description="重置 AI 聊天")
+    async def reset_ai(interaction: discord.Interaction):
+        user_id = interaction.author.id
+        if user_id in user_histories:
+            del user_histories[user_id]
+        await interaction.send("✅ AI 历史已重置。")
 def channel(bot):
     client = OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
@@ -277,49 +287,39 @@ def channel(bot):
     async def on_message(message: discord.Message):
         if message.author == bot.user:
             return
+
         if message.channel.id not in AI_CHAT_CHANNEL_IDS:
             return
 
+        user_id = message.author.id
         user_input = message.content
-        if message.channel.id == 1408292710011502632:
-            system_content = "你是一个乐于助人的 Discord 聊天机器人"
-        elif message.channel.id == 1408292850294198332:
-            system_content = "你是一个猫娘"
-        else:
-            system_content = "你是一个乐于助人的机器人"
+
+        # 初始化用户历史
+        if user_id not in user_histories:
+            user_histories[user_id] = [{"role": "system", "content": SYSTEM_PROMPT.get(message.channel.id, "你是一个乐于助人的机器人")}]
+
+        # 添加用户消息到历史
+        user_histories[user_id].append({"role": "user", "content": user_input})
 
         try:
-            # 创建流对象
-            response_stream = client.chat.completions.create(
-                model="deepseek-v3-250324",
-                messages=[
-                    {"role": "system", "content": system_content},
-                    {"role": "user", "content": user_input}
-                ],
-                stream=True
+            # 一次性生成文本，不使用流式
+            response = client.chat.completions.create(
+                model="o4-mini",
+                messages=user_histories[user_id]
             )
 
-            # 先发送占位消息
-            sent_message = await message.channel.send("⏳ 生成中...")
+            reply = response.choices[0].message.content.strip()
 
-            reply = ""
-            sent_message = await message.channel.send("⏳ 生成中...")
+            # 添加 AI 回复到历史
+            user_histories[user_id].append({"role": "assistant", "content": reply})
 
-            for chunk in response_stream:
-                # 获取增量内容
-                delta_text = ""
-                for choice in chunk.choices:
-                    content = getattr(choice.delta, "content", None)
-                    if content:
-                        delta_text += content
+            await message.channel.send(reply)
 
-                if delta_text:
-                    reply += delta_text
-                    await sent_message.edit(content=reply)
         except Exception as e:
             await message.channel.send(f"出错了：{e}")
 
         await bot.process_commands(message)
+
 
 
 

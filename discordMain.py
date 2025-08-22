@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 from discord.errors import ConnectionClosed
 import yt_dlp
-from openai import AsyncOpenAI
+from openai import OpenAI
 # 本地模块
 from musicCache import get_or_download
 
@@ -268,7 +268,11 @@ def commands(bot):
             # 只发一次错误消息，避免重复 webhook
             await interaction.followup.send(f"❌ 播放失败:\n```{traceback.format_exc()}```")
 def channel(bot):
-    client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url="https://ai.nengyongai.cn/v1"
+    )
+
     @bot.event
     async def on_message(message: discord.Message):
         if message.author == bot.user:

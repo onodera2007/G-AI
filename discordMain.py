@@ -284,7 +284,7 @@ def channel(bot):
         if message.channel.id == 1408292710011502632:
             try:
                 response = await client.chat.completions.create(
-                model="gpt-5-chat-latest",
+                model="deepseek-v3-250324",
                 messages=[
                     {"role": "system", "content": "你是一个乐于助人的 Discord 聊天机器人"},
                     {"role": "user", "content": user_input}
@@ -298,7 +298,7 @@ def channel(bot):
         elif message.channel.id == 1408292850294198332:
             try:
                 response = await client.chat.completions.create(
-                model="gpt-5-chat-latest",
+                model="deepseek-v3-250324",
                 messages=[
                     {"role": "system", "content": "你是一个猫娘"},
                     {"role": "user", "content": user_input}

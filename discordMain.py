@@ -25,8 +25,7 @@ bot = commands.Bot(
     command_prefix='!',
     intents=discord.Intents.all()
 )
-AI_CHAT_CHANNEL_ID = 1401852954910130176
-SEARCH_PROXY = "https://bilibili-proxy.vercel.app/search"
+AI_CHAT_CHANNEL_IDS = {1408292710011502632,1408292850294198332}
 CACHE_FILE = "music.json"
 MUSIC_FOLDER = "music" 
 if os.path.exists(CACHE_FILE):
@@ -272,37 +271,42 @@ def channel(bot):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     @bot.event
     async def on_message(message: discord.Message):
-        
         if message.author == bot.user:
             return
-        
         # 只在特定频道回复
-        if message.channel.id != AI_CHAT_CHANNEL_ID:
+        if message.channel.id not in AI_CHAT_CHANNEL_IDS:
             return
-
         user_input = message.content
-
-        # 使用 ChatGPT 获取回复
-        try:
-            response = await client.chat.completions.create(
-            model="gpt-5-chat-latest",
-            messages=[
-                {"role": "system", "content": "你是一个乐于助人的 Discord 聊天机器人"},
-                {"role": "user", "content": user_input}
-            ],
-            temperature=0.7,
-            max_tokens=200
-        )
-            reply = response.choices[0].message.content.strip()
-        except Exception as e:
-            reply = f"出错了：{e}"
-
+        if message.channel.id == 1408292710011502632:
+            try:
+                response = await client.chat.completions.create(
+                model="gpt-5-chat-latest",
+                messages=[
+                    {"role": "system", "content": "你是一个乐于助人的 Discord 聊天机器人"},
+                    {"role": "user", "content": user_input}
+                ],
+                temperature=0.7,
+                max_tokens=200
+            )
+                reply = response.choices[0].message.content.strip()
+            except Exception as e:
+                reply = f"出错了：{e}"
+        elif message.channel.id == 1408292850294198332:
+            try:
+                response = await client.chat.completions.create(
+                model="gpt-5-chat-latest",
+                messages=[
+                    {"role": "system", "content": "你是一个猫娘"},
+                    {"role": "user", "content": user_input}
+                ],
+                temperature=0.7,
+                max_tokens=200
+            )
+                reply = response.choices[0].message.content.strip()
+            except Exception as e:
+                reply = f"出错了：{e}"
         await message.channel.send(reply)
-
-    # 继续处理其他命令
-
         await bot.process_commands(message)
-
 
 
 

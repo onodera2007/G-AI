@@ -292,26 +292,31 @@ def channel(bot):
             return
 
         user_id = message.author.id
+        channel_id = message.channel.id
         user_input = message.content
 
-        # 初始化用户历史
+        # 初始化用户历史（按用户+频道）
         if user_id not in user_histories:
-            user_histories[user_id] = [{"role": "system", "content": SYSTEM_PROMPT.get(message.channel.id, "你是一个乐于助人的机器人")}]
+            user_histories[user_id] = {}
+        if channel_id not in user_histories[user_id]:
+            user_histories[user_id][channel_id] = [
+                {"role": "system", "content": SYSTEM_PROMPT.get(channel_id, "你是一个乐于助人的机器人")}
+            ]
 
-        # 添加用户消息到历史
-        user_histories[user_id].append({"role": "user", "content": user_input})
+        # 添加用户消息到该频道历史
+        user_histories[user_id][channel_id].append({"role": "user", "content": user_input})
 
         try:
             # 一次性生成文本，不使用流式
             response = client.chat.completions.create(
                 model="o4-mini",
-                messages=user_histories[user_id]
+                messages=user_histories[user_id][channel_id]
             )
 
             reply = response.choices[0].message.content.strip()
 
-            # 添加 AI 回复到历史
-            user_histories[user_id].append({"role": "assistant", "content": reply})
+            # 添加 AI 回复到该频道历史
+            user_histories[user_id][channel_id].append({"role": "assistant", "content": reply})
 
             await message.channel.send(reply)
 
@@ -319,7 +324,6 @@ def channel(bot):
             await message.channel.send(f"出错了：{e}")
 
         await bot.process_commands(message)
-
 
 
 

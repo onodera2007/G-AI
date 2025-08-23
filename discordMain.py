@@ -281,6 +281,8 @@ def channel(bot):
     client = OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
         base_url="https://ai.nengyongai.cn/v1"
+        #api_key=os.getenv("OPENAI_API_KEY2"),
+        #base_url="https://openrouter.ai/api/v1",
     )
 
     @bot.event
@@ -309,7 +311,8 @@ def channel(bot):
         try:
             # 一次性生成文本，不使用流式
             response = client.chat.completions.create(
-                model="o4-mini",
+                model="o4-minii#net",
+                #model="deepseek/deepseek-r1-0528:free",
                 messages=user_histories[user_id][channel_id]
             )
 

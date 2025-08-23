@@ -311,7 +311,7 @@ def channel(bot):
         try:
             # 一次性生成文本，不使用流式
             response = client.chat.completions.create(
-                model="o4-minii#net",
+                model="o4-mini",
                 #model="deepseek/deepseek-r1-0528:free",
                 messages=user_histories[user_id][channel_id]
             )

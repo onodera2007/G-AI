@@ -1,0 +1,30 @@
+name: Run AnyDesk
+
+on:
+  schedule:
+    - cron: '21 21 * * *'   # 06:00 JST = 21:00 UTC 前一天
+    - cron: '3 3 * * *'     # 12:00 JST = 03:00 UTC
+    - cron: '9 9 * * *'     # 18:00 JST = 09:00 UTC
+    - cron: '15 15 * * *'   # 24:00 JST = 15:00 UTC
+  workflow_dispatch:        # 手动触发也保留
+
+jobs:
+  run-bot1:
+    runs-on: ubuntu-latest
+    env:
+      BOT_TOKEN2: ${{ secrets.BOT_TOKEN2 }}
+    steps:
+      - uses: actions/checkout@v3
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+          
+      - name: requirements.txt
+        run: |
+          pip install discord.py==2.5.2
+          pip install openai==1.99.1
+          
+      - name: Run AnyDesk
+        run: python anydesk.py

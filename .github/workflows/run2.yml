@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.13'
           
-      - name: requirements.txt
+      - name: pip install
         run: |
           pip install discord.py==2.5.2
           pip install openai==1.99.1

@@ -21,8 +21,12 @@ except ImportError:
     ga=True
 if (ga!=True):
     load_dotenv()
-bot = commands.Bot(
-    command_prefix='!',
+bot1 = commands.Bot(
+    command_prefix='1',
+    intents=discord.Intents.all()
+)
+bot2 = commands.Bot(
+    command_prefix='2',
     intents=discord.Intents.all()
 )
 AI_CHAT_CHANNEL_IDS = {1408292710011502632,1408292850294198332}
@@ -38,8 +42,8 @@ SYSTEM_PROMPT = {
     1408292710011502632: "你是一个乐于助人的 Discord 聊天机器人",
     1408292850294198332: "你是一个猫娘"
 }
-def commands(bot):
-    @bot.tree.command(name="meme_cn", description="梗")
+def commands(bot1):
+    @bot1.tree.command(name="meme_cn", description="梗")
     async def meme_cn(interaction: discord.Interaction):
         # 定义消息列表
         messages = [
@@ -51,7 +55,7 @@ def commands(bot):
         ]
         random_message = random.choice(messages)
         await interaction.response.send_message(random_message)
-    @bot.tree.command(name="meme", description="meme")
+    @bot1.tree.command(name="meme", description="meme")
     async def meme_en(interaction: discord.Interaction):
         # 定义消息列表
         messages = [
@@ -61,7 +65,7 @@ def commands(bot):
         ]
         random_message = random.choice(messages)
         await interaction.response.send_message(random_message)
-    @bot.tree.command(name="play_youtube", description="播放音乐(YouTube)→可缓存播放")
+    @bot1.tree.command(name="play_youtube", description="播放音乐(YouTube)→可缓存播放")
     async def play(interaction: discord.Interaction, query: str):
         await interaction.response.send_message(f"🔍 正在搜索: {query}")
         ydl_opts = {
@@ -95,7 +99,7 @@ def commands(bot):
 
         voice_client.play(discord.FFmpegPCMAudio(filepath))
         await interaction.followup.send(f"▶️ 正在播放: **{title}** （缓存支持）")
-    @bot.tree.command(name="play_bilibili", description="播放音乐(Bilibili)→弃")
+    @bot1.tree.command(name="play_bilibili", description="播放音乐(Bilibili)→弃")
     async def play(interaction: discord.Interaction, query: str):
         if not interaction.user.voice:
             await interaction.response.send_message("⚠️ 请先加入语音频道")
@@ -155,7 +159,7 @@ def commands(bot):
             await interaction.followup.send(f"❌ 播放失败: {str(e)}")
             import traceback
             print(f"完整错误: {traceback.format_exc()}")
-    @bot.tree.command(name="stop", description="停止播放并离开频道")
+    @bot1.tree.command(name="stop", description="停止播放并离开频道")
     async def stop(interaction: discord.Interaction):
         try:
             await interaction.response.send_message("⏳ 正在停止播放...")
@@ -185,7 +189,7 @@ def commands(bot):
                 pass
 
             await interaction.followup.send(error_msg)
-    @bot.tree.command(name="play_musicfile", description="播放本地或上传的音频文件(极不稳定！)")
+    @bot1.tree.command(name="play_musicfile", description="播放本地或上传的音频文件(极不稳定！)")
     async def play_musicFile(interaction: discord.Interaction, file: discord.Attachment):
         """播放用户上传的音频文件"""
         try:
@@ -211,7 +215,7 @@ def commands(bot):
         except Exception as e:
             await interaction.followup.send(f"❌ 播放失败: {str(e)}")
             print(f"完整错误: {traceback.format_exc()}")
-    @bot.tree.command(name="list_music", description="显示已缓存的音乐列表")
+    @bot1.tree.command(name="list_music", description="显示已缓存的音乐列表")
     async def list_music(interaction: discord.Interaction):
         if not music_cache:
             await interaction.response.send_message("⚠️ 当前没有缓存的曲子")
@@ -225,7 +229,7 @@ def commands(bot):
             music_list = music_list[:1900] + "\n…"
 
         await interaction.response.send_message(f"🎵 已缓存的曲子标题:\n{music_list}")
-    @bot.tree.command(name="play_cache", description="播放已缓存的音乐")
+    @bot1.tree.command(name="play_cache", description="播放已缓存的音乐")
     async def play_cache(interaction: discord.Interaction, title: str):
         await interaction.response.defer(thinking=True)
         # 检查用户是否在语音频道
@@ -271,23 +275,22 @@ def commands(bot):
         except Exception as e:
             # 只发一次错误消息，避免重复 webhook
             await interaction.followup.send(f"❌ 播放失败:\n```{traceback.format_exc()}```")
-    @bot.tree.command(name="reset_ai", description="重置 AI 聊天")
+    @bot1.tree.command(name="reset_ai", description="重置 AI 聊天")
     async def reset_ai(interaction: discord.Interaction):
         user_id = interaction.user.id  # ✅ 使用 user 而不是 author
         if user_id in user_histories:
             del user_histories[user_id]
         await interaction.response.send_message("✅ AI 历史已重置。")
-def channel(bot):
+def channel(bot1):
     client = OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
         base_url="https://ai.nengyongai.cn/v1"
         #api_key=os.getenv("OPENAI_API_KEY2"),
         #base_url="https://openrouter.ai/api/v1",
     )
-
-    @bot.event
+    @bot1.event
     async def on_message(message: discord.Message):
-        if message.author == bot.user:
+        if message.author == bot1.user:
             return
 
         if message.channel.id not in AI_CHAT_CHANNEL_IDS:
@@ -326,8 +329,50 @@ def channel(bot):
         except Exception as e:
             await message.channel.send(f"出错了：{e}")
 
-        await bot.process_commands(message)
+        await bot1.process_commands(message)
+def anydesk(bot2):
+    @bot2.event
+    async def on_message(message: discord.Message):
+        if message.author == bot2.user:
+            return
+        if message.channel.id != 1409834588280328264:
+            return
 
+        user_input = message.content.strip()
+
+        # 检测是否为 9 位以上的数字
+        if user_input.isdigit() and len(user_input) >= 9:
+            masked = f"\\*\\*\\*{user_input[3:-3]}\\*\\*\\*"
+
+            # 删除原始消息
+            await message.delete()
+
+            # 在频道重新发出打码后的内容，并注明是谁发的
+            await message.channel.send(f"{message.author.mention} 的邀请码：{masked}")
+
+            # 同时通知管理员
+            gengyoubo = await bot2.fetch_user(711936910620360765)
+            if gengyoubo:
+                await gengyoubo.send(
+                    f"{message.author} 的原始邀请码是：{user_input}，是否接受？"
+                )
+        else:
+            await message.channel.send("输入不是 9 位以上的数字")
+def commands2(bot2):
+    @bot2.tree.command(name="ping", description="ping")
+    async def ping(interaction: discord.Interaction):
+        await interaction.response.send_message("Pong!")
+    @bot2.tree.command(name="yes", description="yes")
+    async def yes(interaction: discord.Interaction,value: str):
+        masked = f"\\*\\*\\*{value[3:-3]}\\*\\*\\*"
+        await interaction.response.send_message(f"邀请码为：{masked}的用户已通过审核")
+    @bot2.tree.command(name="no", description="no")
+    async def no(interaction: discord.Interaction,value: str):
+        masked = f"\\*\\*\\*{value[3:-3]}\\*\\*\\*"
+        await interaction.response.send_message(f"邀请码为：{masked}的用户未通过审核")
+        
+
+        
 
 
 

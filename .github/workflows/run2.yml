@@ -25,6 +25,6 @@ jobs:
         run: |
           pip install discord.py==2.5.2
           pip install openai==1.99.1
-          
+          pip install yt-dlp
       - name: Run AnyDesk
         run: python anydesk.py

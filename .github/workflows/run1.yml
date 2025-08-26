@@ -32,5 +32,5 @@ jobs:
           sudo apt-get install -y libopus0 libopus-dev
           pip install -r requirements.txt
           
-      - name: Run bot1
-        run: python bot1.py
+      - name: Run G-AI
+        run: python bot.py

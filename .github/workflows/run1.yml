@@ -1,4 +1,4 @@
-name: Run Discord bot1
+name: Run G-AI
 
 on:
   schedule:

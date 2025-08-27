@@ -19,7 +19,7 @@ jobs:
         
       - uses: FedericoCarboni/setup-ffmpeg@v3
         with:
-          ffmpeg-version: '8.0'
+          ffmpeg-version: 'n8.0'
         
       - name: Setup Python
         uses: actions/setup-python@v4

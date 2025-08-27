@@ -20,8 +20,9 @@ jobs:
       - name: Set up FFmpeg
         uses: FedericoCarboni/setup-ffmpeg@v3
         with:
-          ffmpeg-version: latest
-        
+          ffmpeg-version: latest  
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Setup Python
         uses: actions/setup-python@v4
         with:

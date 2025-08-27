@@ -17,11 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         
-      - name: Set up FFmpeg
-        uses: FedericoCarboni/setup-ffmpeg@v3
-        with:
-          ffmpeg-version: latest  
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup FFmpeg
+        uses: federicocarboni/setup-ffmpeg@v3.1
           
       - name: Setup Python
         uses: actions/setup-python@v4
